@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Copy, Check, User, Bot } from 'lucide-react';
+import { Send, Copy, Check, User, Bot, Sparkles } from 'lucide-react';
 
 // Message Component with Markdown Support
 const Message = ({ message, isStreaming }) => {
@@ -12,7 +12,6 @@ const Message = ({ message, isStreaming }) => {
   };
 
   const renderContent = (content) => {
-    // Simple markdown-like rendering for code blocks
     const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
     const parts = [];
     let lastIndex = 0;
@@ -99,12 +98,42 @@ const Message = ({ message, isStreaming }) => {
   );
 };
 
+// Navbar Component (Updated)
+const Navbar = () => {
+  return (
+    <header className="border-b border-zinc-800 bg-zinc-950/70 backdrop-blur-xl sticky top-0 z-50">
+      <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        
+        {/* Logo with hover effect only */}
+        <div className="flex items-center gap-2 group cursor-pointer transition-transform duration-300">
+          <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-gradient-to-tr from-blue-600 to-purple-600 transform transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
+          <span className="text-sm font-medium text-zinc-400 group-hover:text-white transition-colors">
+            Firemind AI
+          </span>
+        </div>
+
+        {/* Center Title */}
+        <h1 className="text-lg font-semibold text-white tracking-wide">
+          AI Chat Assistant
+        </h1>
+
+        {/* Get Started Button — No hover or animation */}
+        <button className="px-4 py-2 text-sm font-medium rounded-xl bg-white text-black border-none shadow-none transition-transform duration-200 hover:scale-105 focus:bg-white hover:bg-white active:bg-white">
+          Get Started
+        </button>
+      </div>
+    </header>
+  );
+};
+
 // Main Chat Component
 export default function ChatInterface() {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: 'Hello! I\'m your AI assistant. How can I help you today?'
+      content: "Hello! I'm your AI assistant. How can I help you today?"
     }
   ]);
   const [input, setInput] = useState('');
@@ -124,8 +153,6 @@ export default function ChatInterface() {
   const simulateStreaming = async (text) => {
     setIsStreaming(true);
     let streamedContent = '';
-    
-    // Simulate streaming by adding characters progressively
     for (let i = 0; i < text.length; i++) {
       streamedContent += text[i];
       setMessages(prev => {
@@ -136,11 +163,8 @@ export default function ChatInterface() {
         };
         return newMessages;
       });
-      
-      // Random delay between 10-30ms for realistic streaming
       await new Promise(resolve => setTimeout(resolve, Math.random() * 20 + 10));
     }
-    
     setIsStreaming(false);
   };
 
@@ -152,28 +176,19 @@ export default function ChatInterface() {
     setMessages(prev => [...prev, userMessage]);
     const currentInput = input;
     setInput('');
-
-    // Add empty assistant message for streaming
     setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
     setIsStreaming(true);
 
     try {
-      // Call FastAPI backend
       const response = await fetch('http://localhost:8000/ask', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: currentInput }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const data = await response.json();
-      
-      // Simulate streaming effect with the received answer
       await simulateStreaming(data.answer);
     } catch (error) {
       console.error('Error calling API:', error);
@@ -181,7 +196,7 @@ export default function ChatInterface() {
         const newMessages = [...prev];
         newMessages[newMessages.length - 1] = {
           role: 'assistant',
-          content: '❌ Sorry, there was an error connecting to the server. Please make sure the FastAPI backend is running on http://localhost:8000'
+          content: '❌ Sorry, there was an error connecting to the server. Please make sure the FastAPI backend is running.'
         };
         return newMessages;
       });
@@ -190,62 +205,59 @@ export default function ChatInterface() {
   };
 
   return (
-    <div className="flex h-screen bg-black text-zinc-200">
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="border-b border-zinc-800 bg-zinc-950/50 backdrop-blur">
-          <div className="flex items-center justify-center p-4">
-            <h1 className="text-lg font-semibold">AI Chat Assistant</h1>
-          </div>
-        </header>
+    <div className="flex h-screen bg-black text-zinc-200 flex-col">
+      {/* Navbar */}
+      <Navbar />
 
-        {/* Messages Container */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="max-w-4xl mx-auto">
-            {messages.map((message, index) => (
-              <Message 
-                key={index} 
-                message={message}
-                isStreaming={isStreaming && index === messages.length - 1}
-              />
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
+      {/* Chat Messages */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-4xl mx-auto">
+          {messages.map((message, index) => (
+            <Message 
+              key={index} 
+              message={message}
+              isStreaming={isStreaming && index === messages.length - 1}
+            />
+          ))}
+          <div ref={messagesEndRef} />
         </div>
+      </div>
 
-        {/* Input Area */}
-        <div className="border-t border-zinc-800 bg-zinc-950/50 backdrop-blur">
-          <div className="max-w-4xl mx-auto p-4">
-            <div className="relative">
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSubmit(e);
-                  }
-                }}
-                placeholder="Send a message..."
-                disabled={isStreaming}
-                className="w-full px-4 py-4 pr-12 bg-zinc-900 border border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed text-zinc-200 placeholder-zinc-500"
-              />
-              <button
-                onClick={handleSubmit}
-                disabled={!input.trim() || isStreaming}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-700 disabled:cursor-not-allowed rounded-lg transition-colors"
-              >
-                <Send className="w-5 h-5 text-white" />
-              </button>
-            </div>
-            <div className="mt-2 text-xs text-zinc-500 text-center">
-              Press Enter to send. Backend integration ready.
-            </div>
+      {/* Input Area */}
+      <div className="border-t border-zinc-800 bg-zinc-950/50 backdrop-blur">
+        <div className="max-w-4xl mx-auto p-4">
+          <div className="relative">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
+              placeholder="Send a message..."
+              disabled={isStreaming}
+              className="w-full px-4 py-4 pr-12 bg-zinc-900 border border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed text-zinc-200 placeholder-zinc-500"
+            />
+            <button
+              onClick={handleSubmit}
+              disabled={!input.trim() || isStreaming}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-700 disabled:cursor-not-allowed rounded-lg transition-colors"
+            >
+              <Send className="w-5 h-5 text-white" />
+            </button>
+          </div>
+          <div className="mt-2 text-xs text-zinc-500 text-center">
+            Press Enter to send. AI assistant can make mistakes.
           </div>
         </div>
       </div>
     </div>
   );
 }
+
+
+
