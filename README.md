@@ -18,7 +18,7 @@ A simple yet powerful AI-powered chatbot that uses OpenAI models to answer quest
 
 Check out the live demo:
 
-- [Link](https://your-vercel-link.com)
+- [Link](https://ask-me-tawny.vercel.app)
 
 ---
 
