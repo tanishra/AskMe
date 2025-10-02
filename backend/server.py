@@ -4,14 +4,15 @@ from pydantic import BaseModel
 from backend.api_client import ask_question
 from backend.logger import log_interaction
 
-app = FastAPI(title="AI Q&A Bot API", version="1.0")
+app = FastAPI(title="AI Assistant", version="1.0")
 
 # CORS middleware - CRITICAL for frontend to work
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",  # Next.js dev server
+        "http://localhost:3000", 
         "http://127.0.0.1:3000",
+        "https://ask-me-sigma.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
