@@ -211,7 +211,7 @@ export default function ChatInterface() {
         newMessages[newMessages.length - 1] = {
           role: 'assistant',
           content:
-            '❌ Sorry, there was an error connecting to the server. Please make sure the FastAPI backend is running.',
+            '❌ Sorry, there was an error connecting to the server. Please make sure the backend is running.',
         };
         return newMessages;
       });
