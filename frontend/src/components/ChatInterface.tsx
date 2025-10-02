@@ -98,28 +98,28 @@ const Message = ({ message, isStreaming }) => {
   );
 };
 
-// Navbar Component (Updated)
+// Navbar Component
 const Navbar = () => {
   return (
     <header className="border-b border-zinc-800 bg-zinc-950/70 backdrop-blur-xl sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         
-        {/* Logo with hover effect only */}
+        {/* Logo with hover effect */}
         <div className="flex items-center gap-2 group cursor-pointer transition-transform duration-300">
           <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-gradient-to-tr from-blue-600 to-purple-600 transform transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
             <Sparkles className="w-5 h-5 text-white" />
           </div>
           <span className="text-sm font-medium text-zinc-400 group-hover:text-white transition-colors">
-            Firemind AI
+          AI Assistant
           </span>
         </div>
 
-        {/* Center Title */}
+        {/* Center Title
         <h1 className="text-lg font-semibold text-white tracking-wide">
-          AI Chat Assistant
-        </h1>
+          AI Assistant
+        </h1> */}
 
-        {/* Get Started Button — No hover or animation */}
+        {/* Get Started Button */}
         <button className="px-4 py-2 text-sm font-medium rounded-xl bg-white text-black border-none shadow-none transition-transform duration-200 hover:scale-105 focus:bg-white hover:bg-white active:bg-white">
           Get Started
         </button>
@@ -128,14 +128,9 @@ const Navbar = () => {
   );
 };
 
-// Main Chat Component
+// Main Chat Interface
 export default function ChatInterface() {
-  const [messages, setMessages] = useState([
-    {
-      role: 'assistant',
-      content: "Hello! I'm your AI assistant. How can I help you today?"
-    }
-  ]);
+  const [messages, setMessages] = useState([]); // Start with empty messages
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   
@@ -204,22 +199,37 @@ export default function ChatInterface() {
     }
   };
 
+  const showWelcomeScreen = messages.length === 0;
+
   return (
     <div className="flex h-screen bg-black text-zinc-200 flex-col">
       {/* Navbar */}
       <Navbar />
 
-      {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto">
-          {messages.map((message, index) => (
-            <Message 
-              key={index} 
-              message={message}
-              isStreaming={isStreaming && index === messages.length - 1}
-            />
-          ))}
-          <div ref={messagesEndRef} />
+      {/* Chat or Welcome Screen */}
+      <div className="flex-1 overflow-y-auto flex flex-col">
+        <div className="max-w-4xl mx-auto flex-1 w-full flex flex-col justify-between">
+          {showWelcomeScreen ? (
+            <div className="flex flex-1 flex-col items-center justify-center text-center px-6">
+              <h1 className="text-3xl font-semibold text-white mb-3">
+                Where should we begin?
+              </h1>
+              <p className="text-zinc-400 text-sm max-w-md">
+                Ask me anything — from explaining AI concepts to generating code, or even brainstorming your next big idea.
+              </p>
+            </div>
+          ) : (
+            <div>
+              {messages.map((message, index) => (
+                <Message 
+                  key={index} 
+                  message={message}
+                  isStreaming={isStreaming && index === messages.length - 1}
+                />
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
         </div>
       </div>
 
@@ -258,6 +268,3 @@ export default function ChatInterface() {
     </div>
   );
 }
-
-
-
