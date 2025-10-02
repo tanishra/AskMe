@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, FormEvent } from 'react';
 import { Send, Copy, Check, User, Bot, Sparkles } from 'lucide-react';
 
-// Define the Message interface once, use everywhere
 interface Message {
   role: 'user' | 'assistant';
   content: string;
