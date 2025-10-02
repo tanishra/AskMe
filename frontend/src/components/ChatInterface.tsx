@@ -1,0 +1,251 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Copy, Check, User, Bot } from 'lucide-react';
+
+// Message Component with Markdown Support
+const Message = ({ message, isStreaming }) => {
+  const [copied, setCopied] = useState(false);
+  
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const renderContent = (content) => {
+    // Simple markdown-like rendering for code blocks
+    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = codeBlockRegex.exec(content)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push({
+          type: 'text',
+          content: content.slice(lastIndex, match.index)
+        });
+      }
+      parts.push({
+        type: 'code',
+        language: match[1] || 'text',
+        content: match[2].trim()
+      });
+      lastIndex = match.index + match[0].length;
+    }
+
+    if (lastIndex < content.length) {
+      parts.push({
+        type: 'text',
+        content: content.slice(lastIndex)
+      });
+    }
+
+    return parts.length > 0 ? parts : [{ type: 'text', content }];
+  };
+
+  const parts = renderContent(message.content);
+
+  return (
+    <div className={`flex gap-4 p-6 ${message.role === 'assistant' ? 'bg-zinc-900/50' : ''}`}>
+      <div className="flex-shrink-0">
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+          message.role === 'assistant' ? 'bg-blue-600' : 'bg-zinc-700'
+        }`}>
+          {message.role === 'assistant' ? (
+            <Bot className="w-5 h-5 text-white" />
+          ) : (
+            <User className="w-5 h-5 text-white" />
+          )}
+        </div>
+      </div>
+      <div className="flex-1 space-y-3 overflow-hidden">
+        {parts.map((part, idx) => (
+          part.type === 'code' ? (
+            <div key={idx} className="relative group">
+              <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={() => copyToClipboard(part.content)}
+                  className="p-2 rounded-lg bg-zinc-700 hover:bg-zinc-600 transition-colors"
+                >
+                  {copied ? (
+                    <Check className="w-4 h-4 text-green-400" />
+                  ) : (
+                    <Copy className="w-4 h-4 text-zinc-300" />
+                  )}
+                </button>
+              </div>
+              <div className="bg-black rounded-lg p-4 overflow-x-auto">
+                <div className="text-xs text-zinc-500 mb-2">{part.language}</div>
+                <pre className="text-sm text-zinc-200">
+                  <code>{part.content}</code>
+                </pre>
+              </div>
+            </div>
+          ) : (
+            <div key={idx} className="text-zinc-200 leading-relaxed whitespace-pre-wrap">
+              {part.content}
+            </div>
+          )
+        ))}
+        {isStreaming && (
+          <div className="flex gap-1">
+            <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+            <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+            <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Main Chat Component
+export default function ChatInterface() {
+  const [messages, setMessages] = useState([
+    {
+      role: 'assistant',
+      content: 'Hello! I\'m your AI assistant. How can I help you today?'
+    }
+  ]);
+  const [input, setInput] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
+  
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const simulateStreaming = async (text) => {
+    setIsStreaming(true);
+    let streamedContent = '';
+    
+    // Simulate streaming by adding characters progressively
+    for (let i = 0; i < text.length; i++) {
+      streamedContent += text[i];
+      setMessages(prev => {
+        const newMessages = [...prev];
+        newMessages[newMessages.length - 1] = {
+          role: 'assistant',
+          content: streamedContent
+        };
+        return newMessages;
+      });
+      
+      // Random delay between 10-30ms for realistic streaming
+      await new Promise(resolve => setTimeout(resolve, Math.random() * 20 + 10));
+    }
+    
+    setIsStreaming(false);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!input.trim() || isStreaming) return;
+
+    const userMessage = { role: 'user', content: input };
+    setMessages(prev => [...prev, userMessage]);
+    const currentInput = input;
+    setInput('');
+
+    // Add empty assistant message for streaming
+    setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+    setIsStreaming(true);
+
+    try {
+      // Call FastAPI backend
+      const response = await fetch('http://localhost:8000/ask', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ question: currentInput }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Simulate streaming effect with the received answer
+      await simulateStreaming(data.answer);
+    } catch (error) {
+      console.error('Error calling API:', error);
+      setMessages(prev => {
+        const newMessages = [...prev];
+        newMessages[newMessages.length - 1] = {
+          role: 'assistant',
+          content: '❌ Sorry, there was an error connecting to the server. Please make sure the FastAPI backend is running on http://localhost:8000'
+        };
+        return newMessages;
+      });
+      setIsStreaming(false);
+    }
+  };
+
+  return (
+    <div className="flex h-screen bg-black text-zinc-200">
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <header className="border-b border-zinc-800 bg-zinc-950/50 backdrop-blur">
+          <div className="flex items-center justify-center p-4">
+            <h1 className="text-lg font-semibold">AI Chat Assistant</h1>
+          </div>
+        </header>
+
+        {/* Messages Container */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-4xl mx-auto">
+            {messages.map((message, index) => (
+              <Message 
+                key={index} 
+                message={message}
+                isStreaming={isStreaming && index === messages.length - 1}
+              />
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
+
+        {/* Input Area */}
+        <div className="border-t border-zinc-800 bg-zinc-950/50 backdrop-blur">
+          <div className="max-w-4xl mx-auto p-4">
+            <div className="relative">
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit(e);
+                  }
+                }}
+                placeholder="Send a message..."
+                disabled={isStreaming}
+                className="w-full px-4 py-4 pr-12 bg-zinc-900 border border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed text-zinc-200 placeholder-zinc-500"
+              />
+              <button
+                onClick={handleSubmit}
+                disabled={!input.trim() || isStreaming}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-700 disabled:cursor-not-allowed rounded-lg transition-colors"
+              >
+                <Send className="w-5 h-5 text-white" />
+              </button>
+            </div>
+            <div className="mt-2 text-xs text-zinc-500 text-center">
+              Press Enter to send. Backend integration ready.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
