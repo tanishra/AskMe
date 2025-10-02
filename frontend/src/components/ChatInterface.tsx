@@ -166,7 +166,6 @@ export default function ChatInterface() {
       streamedContent += text[i];
       setMessages((prev) => {
         const newMessages = [...prev];
-        // TypeScript needs explicit type here to confirm literals are valid
         newMessages[newMessages.length - 1] = {
           role: 'assistant',
           content: streamedContent,
@@ -182,7 +181,6 @@ export default function ChatInterface() {
     e.preventDefault();
     if (!input.trim() || isStreaming) return;
 
-    // Use literal type here so TypeScript infers correctly
     const userMessage: Message = { role: 'user', content: input };
     setMessages((prev) => [...prev, userMessage]);
 
