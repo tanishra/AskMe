@@ -6,7 +6,7 @@ from backend.logger import log_interaction
 
 app = FastAPI(title="AI Assistant", version="1.0")
 
-# CORS middleware - CRITICAL for frontend to work
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
