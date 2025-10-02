@@ -40,14 +40,6 @@ Check out the live demo:
 
 ---
 
-## Demo 🎥
-
-Check out the live demo:
-
-- [AI Q&A Bot Demo (Vercel)](https://your-vercel-link.com)
-
----
-
 ## Technologies Used 🛠️
 
 - **Backend**: FastAPI, EURI API (OpenAI)
@@ -108,6 +100,16 @@ npm install
 ```bash
 npm run dev
 ```
+
+---
+
+## Future Enhancements 🚀
+
+- **User Authentication**: Add login/signup for personalized experiences.
+- **Chat History**: Save and view past conversations.
+- **Media Uploads**: Enable image or file uploads for processing.
+- **AI Model Customization**: Allow fine-tuning of AI models for specific domains.
+- **Voice Integration**: Implement speech-to-text and text-to-speech functionality.
 
 ---
 
