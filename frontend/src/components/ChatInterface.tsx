@@ -175,7 +175,7 @@ export default function ChatInterface() {
     setIsStreaming(true);
 
     try {
-      const response = await fetch('http://localhost:8000/ask', {
+      const response = await fetch('https://askme-2984.onrender.com/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: currentInput }),
