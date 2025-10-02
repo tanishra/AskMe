@@ -36,7 +36,7 @@ Check out the live demo:
 
 - **Python 3.11+** for the backend
 - **Next.js 15.5+** for the frontend
-- **EURI API Key**
+- **EURI API Key** (https://euron.one)
 
 ---
 
